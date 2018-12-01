@@ -4,6 +4,8 @@
  * @author simpart
  */
 const mf = require('mofron');
+const Text = require('mofron-comp-text');
+
 mf.comp.TreeIF = class extends mf.Component {
     /**
      * initialize component
@@ -14,6 +16,7 @@ mf.comp.TreeIF = class extends mf.Component {
         try {
             super();
             this.name('TreeIF');
+            this.prmMap(['treeKey', 'treeValue']);
             this.prmOpt(po);
         } catch (e) {
             console.error(e.stack);
@@ -21,59 +24,47 @@ mf.comp.TreeIF = class extends mf.Component {
         }
     }
     
-    initDomConts () {
+    load (prm) {
         try {
-            super.initDomConts();
-            this.child(this.treeComp());
-        } catch (e) {
-            console.error(e.stack);
-            throw e;
-        }
-    }
-    
-    treeComp (prm) {
-        try { return this.innerComp('treeComp', 'Component', prm, mf.Component); } catch (e) {
-            console.error(e.stack);
-            throw e;
-        }
-    }
-    
-    keyComp (prm) {
-        try {
-            let ret = this.member('keyComp', 'Component', prm);
-            if ( (undefined !== prm) && ('key' === this.type()) ) {
-                this.treeComp(prm);
+            for (let pidx in prm) {
+                let tchd = new mf.comp.TreeIF(pidx);
+                if ('string' !== typeof prm[pidx]) {
+                    /* key-object */
+                    tchd.load(prm[pidx]);
+                    this.treeChild(tchd);
+                } else {
+                    /* key-value */
+                    tchd.treeValue(prm[pidx]);
+                    this.treeChild(tchd);
+                }
             }
-            return ret;
         } catch (e) {
             console.error(e.stack);
             throw e;
         }
     }
     
-    valComp (prm) {
+    isIndex () {
         try {
-            let ret = this.member('valComp', 'Component', prm);
-            if ( (undefined !== prm) && ('value' === this.type()) ) {
-                this.treeComp(prm);
+            if (null == this.treeValue()) {
+                return true;
             }
-            return ret;
+            return false;
         } catch (e) {
             console.error(e.stack);
             throw e;
         }
     }
     
-    type (prm) {
-        try {
-            let ret = this.member('type', ['key', 'value'], prm);
-            if (undefined !== prm) {
-                this.treeComp(
-                    ('key' === prm) ? this.keyComp() : this.valComp()
-                );
-            }
-            return ret;
-        } catch (e) {
+    treeKey (prm) {
+        try { return this.member('treeKey', 'string', prm); } catch (e) {
+            console.error(e.stack);
+            throw e;
+        }
+    }
+    
+    treeValue (prm) {
+        try { return this.member('treeValue', 'string', prm); } catch (e) {
             console.error(e.stack);
             throw e;
         }
@@ -82,7 +73,7 @@ mf.comp.TreeIF = class extends mf.Component {
     treeChild (prm) {
         try {
             if (true === mf.func.isInclude(prm, 'TreeIF')) {
-                prm.executeOption({ treeParent : this });
+                prm.execOption({ treeParent : this });
             }
             return this.arrayMember('treeChild', 'Component', prm);
         } catch (e) {
@@ -93,6 +84,13 @@ mf.comp.TreeIF = class extends mf.Component {
     
     treeParent (prm) {
         try { return this.member('treeParent', ['Component'], prm); } catch (e) {
+            console.error(e.stack);
+            throw e;
+        }
+    }
+    
+    treeComp (prm) {
+        try { return this.member('treeComp', ['Component'], prm); } catch (e) {
             console.error(e.stack);
             throw e;
         }
